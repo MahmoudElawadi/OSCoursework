@@ -1,0 +1,102 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <sys/wait.h>
+#include <string.h>
+
+// function to perform insertion sort on an array
+void insertion_sort(int arr[], int size) {
+    int i, j, key;
+    for (i = 1; i < size; i++) {
+        key = arr[i];
+        j = i - 1;
+
+        while (j >= 0 && arr[j] > key) {
+            arr[j + 1] = arr[j];
+            j = j - 1;
+        }
+        arr[j + 1] = key;
+    }
+}
+
+int main(int argc , char *argv[]){
+
+    int fd_1[2];
+    int fd_2[2];
+    int return_value_1 , return_value_2;
+
+    int size = argc - 1;
+
+    // create an array to store the integers passed as arguments
+    int arr[size] , sorted_arr[size];
+
+    // convert the arguments to integers and store them in the array
+    for(int i = 0 ; i<size ; ++i){
+        int num = atoi(argv[i+1]);
+        // check for errors in input
+        if (num==0 && strcmp(argv[i+1] , "0") !=0){
+            printf("Error: Input must be integers\n");
+            return 1;
+        }
+        arr[i] = num;
+    }
+
+    // create two pipes
+    return_value_1 = pipe(fd_1);
+    if (return_value_1 == -1){
+        printf("Unable to create pipe 1");
+        exit(1);
+    }
+
+    return_value_2 = pipe(fd_2);
+    if (return_value_2 == -1){
+        printf("Unable to create pipe 2");
+        exit(1);
+    }
+
+    // create a new process using fork()
+    int rc = fork();
+
+    // check for errors in creating a new process
+    if (rc<0){
+        printf("Error creating a new process");
+        exit(1);
+    }
+
+    // if we are in the child process
+    else if (rc==0){
+        // close the write end of the first pipe
+        close(fd_1[1]);
+        // read the contents of the pipe into the array
+        read(fd_1[0] , arr , size * sizeof(int));
+        // perform bubble sort on the array
+        insertion_sort(arr,size);
+        // close the read end of the second pipe
+        close(fd_2[0]);
+        // write the sorted array to the second pipe
+        write(fd_2[1] , arr , size * sizeof(int));
+        // exit the child process
+        exit(0);
+    }
+
+    // if we are in the parent process
+    else{
+        // close the read end of the first pipe
+        close(fd_1[0]);
+        // write the contents of the array to the first pipe
+        write(fd_1[1] , arr , size * sizeof(int));
+        // close the write end of the second pipe
+        close(fd_2[1]);
+        // read the sorted array from the second pipe
+        read(fd_2[0] , sorted_arr , size * sizeof(int));
+
+        // print the sorted array
+        printf("Sorted array: ");
+        for(int i = 0 ; i<size ; ++i){
+            printf("%d" , sorted_arr[i]);
+        }
+        printf("\n");
+    }
+    return 0;
+}

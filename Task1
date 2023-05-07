@@ -1,0 +1,57 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <sys/wait.h>
+
+int main(int argc , char *argv[]){
+
+    // convert the first argument to an integer 
+    int num = atoi(argv[1]);
+    // check if the integer is positive
+    if (num<=0)
+        printf("Please enter a positive integer!");
+    else{
+
+        // create a new process using fork()
+        int rc = fork();
+        // check for errors in creating a new process
+        if (rc<0){
+            printf("Error creating a new process");
+            exit(1);
+        }
+
+        // if we are in the child process
+        else if (rc==0){
+            // print the original number
+            printf("%d" , num);
+            // while the number is not equal to 1
+            while (num!=1){
+
+                // if the number is even, divide it by 2
+                if (num%2==0)
+                    num/=2;
+                // if the number is odd, multiply it by 3 and add 1
+                else
+                    num = 3 * num +1;
+                // print the new value of the number
+                printf("%d" , num);
+            }
+            // print a message indicating that the child process has ended
+            printf("Child ends\n");		
+        }
+
+        // if we are in the parent process
+        else{
+            // print a message indicating that the parent process is waiting for the child process to complete
+            printf("Parent is waiting for child to complete...\n");
+            // wait for the child process to complete
+            wait(NULL);
+            // print a message indicating that the parent process has ended
+            printf("Parent ends\n");
+
+        }
+    }
+
+    return 0;
+}

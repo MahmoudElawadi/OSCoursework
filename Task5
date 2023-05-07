@@ -1,0 +1,55 @@
+import java.util.Scanner;
+
+class FibonacciThread extends Thread {
+    // n is the number of terms in the Fibonacci sequence to generate
+    private int n;
+    // sequence is an array to store the generated Fibonacci sequence
+    private int[] sequence;
+
+    // Constructor to initialize the number of terms in the sequence
+    public FibonacciThread(int n) {
+        this.n = n;
+        this.sequence = new int[n];
+    }
+
+    // The run() method generates the Fibonacci sequence
+    public void run() {
+        sequence[0] = 0;
+        if (n > 1) {
+            sequence[1] = 1;
+            for (int i = 2; i < n; i++) {
+                sequence[i] = sequence[i - 1] + sequence[i - 2];
+            }
+            // Print the generated sequence
+            System.out.println("Fibonacci sequence:");
+            for (int i = 0; i < n; i++) {
+                System.out.print(sequence[i] + " ");
+            }
+        }
+    }
+}
+
+public class FibonacciGenerator {
+    public static void main(String[] args) {
+        // Get the number of terms to generate from user input
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Enter number of terms to generate: ");
+        int n = scanner.nextInt();
+
+        // Check if the input is valid
+        if (n < 1) {
+            System.out.println("Please enter a positive integer!");
+            return;
+        }
+
+        // Create a new FibonacciThread object and start the thread
+        FibonacciThread fibonacciThread = new FibonacciThread(n);
+        fibonacciThread.start();
+        try {
+            // Wait for the thread to finish before continuing
+            fibonacciThread.join();
+        } catch (InterruptedException e) {
+            System.out.println(e);
+        }
+    }
+}
